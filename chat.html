@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCINTILLA · Market Chat</title>
+<style>
+  :root{--bg:#0A0A0F;--panel:#11111A;--line:#222236;--cyan:#00D4FF;--txt:#E8E8F0;--dim:#888899}
+  *{box-sizing:border-box}
+  body{background:var(--bg);color:var(--txt);font-family:'SF Mono',Menlo,monospace;margin:0;display:flex;flex-direction:column;height:100dvh}
+  header{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:10px}
+  header h1{font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--cyan);margin:0}
+  header .sub{color:var(--dim);font-size:11px}
+  #log{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:12px;max-width:980px;width:100%;margin:0 auto}
+  .msg{max-width:92%;padding:11px 15px;border-radius:8px;font-size:13px;line-height:1.6;word-wrap:break-word}
+  .user{align-self:flex-end;background:#0E2A33;border:1px solid #0E4A5A;white-space:pre-wrap}
+  .bot{align-self:flex-start;background:var(--panel);border:1px solid var(--line)}
+  .meta{align-self:flex-start;color:var(--dim);font-size:10.5px;padding:0 4px}
+  .err{color:#FF6B7A}
+  /* North Star markdown rendering */
+  .bot h1,.bot h2,.bot h3{color:var(--cyan);text-transform:uppercase;letter-spacing:1px;font-size:12.5px;margin:14px 0 6px;border-bottom:1px solid #00D4FF33;padding-bottom:4px}
+  .bot p{margin:7px 0}
+  .bot strong{color:var(--cyan);font-weight:700}
+  .bot table{border-collapse:collapse;margin:10px 0;width:100%;font-size:12px}
+  .bot th{color:var(--cyan);text-align:left;border-bottom:1px solid #00D4FF44;padding:5px 9px;text-transform:uppercase;font-size:10.5px;letter-spacing:1px}
+  .bot td{border-bottom:1px solid #222230;padding:5px 9px}
+  .bot tr:last-child td{border-bottom:none}
+  .bot code{background:#1A1A28;padding:1px 5px;border-radius:3px;color:#9FE8FF;font-size:12px}
+  .bot ul,.bot ol{margin:6px 0;padding-left:20px}
+  .bot li{margin:3px 0}
+  .bot hr{border:0;border-top:1px solid var(--line);margin:12px 0}
+  .bot blockquote{border-left:2px solid var(--cyan);margin:8px 0;padding:2px 12px;color:var(--dim)}
+  form{display:flex;gap:8px;padding:12px 16px;border-top:1px solid var(--line)}
+  input{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--txt);font:inherit;font-size:13px;padding:11px 12px;outline:none}
+  input:focus{border-color:var(--cyan)}
+  button{background:var(--cyan);color:#06222B;border:0;border-radius:6px;font:inherit;font-weight:bold;font-size:13px;padding:0 18px;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+  button:disabled{opacity:.4}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);animation:p 1s infinite alternate}
+  @keyframes p{from{opacity:.2}to{opacity:1}}
+</style>
+</head>
+<body>
+<header><h1>SCINTILLA · Market Chat</h1>
+  <select id="desk" style="background:#11111A;border:1px solid #222236;border-radius:6px;color:#E8E8F0;font:inherit;font-size:11px;padding:5px 8px;margin-left:10px"><option value="">MASTER</option></select>
+  <span class="sub">your database · 43M+ data points · read-only</span></header>
+<div id="log">
+  <div class="msg bot">Ask me anything your database can answer — "is NVDA stretched on the weekly?", "AAPL margin trend last 10 years", "what's the VIX term structure saying?", "biggest premarket movers stats", "insider buying in the last month?"</div>
+</div>
+<form id="f">
+  <input id="q" placeholder="ask the database…" autocomplete="off" autofocus>
+  <button id="go">Send</button>
+</form>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.1.5/purify.min.js"></script>
+<script>
+const FN = "https://wadinxqplrggagkvrdag.supabase.co/functions/v1/chat";
+const QP = new URLSearchParams(location.search);
+// SECURITY: page default = BETA tier. Operator appends ?k=<operator gate> (kept out of source).
+const GATE = QP.get('k') || "NS-beta-0389a317421e";
+const SCOPE = (QP.get('t') || '').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,12);  // ?t=NVDA = desk agent
+let CONVO = sessionStorage.getItem('scintilla_convo_'+SCOPE);
+if(!CONVO){ CONVO='c'+Date.now().toString(36)+Math.random().toString(36).slice(2,8); sessionStorage.setItem('scintilla_convo_'+SCOPE,CONVO); }
+if(SCOPE){ document.querySelector('header h1').textContent='SCINTILLA · '+SCOPE+' DESK'; document.title='SCINTILLA · '+SCOPE+' Desk'; }
+// desk dropdown — one chatbot, pick your desk; MASTER is master of all
+(async function(){
+  const sel=document.getElementById('desk');
+  try{
+    const r=await fetch("https://wadinxqplrggagkvrdag.supabase.co/rest/v1/company_profile?select=ticker&order=market_cap.desc.nullslast&limit=140",
+      {headers:{apikey:"sb_publishable_AutibLpFtTns-WHAg67Pvw_I0HmjqE9",Authorization:"Bearer sb_publishable_AutibLpFtTns-WHAg67Pvw_I0HmjqE9"}});
+    (await r.json()).forEach(p=>{const o=document.createElement('option');o.value=p.ticker;o.text=p.ticker+' DESK';sel.add(o);});
+  }catch(e){}
+  sel.value=SCOPE||'';
+  sel.addEventListener('change',()=>{
+    const k=QP.get('k')?('&k='+encodeURIComponent(QP.get('k'))):'';
+    location.href='chat.html'+(sel.value?('?t='+sel.value+k):(k?('?'+k.slice(1)):''));
+  });
+})();
+const log = document.getElementById('log'), f = document.getElementById('f'),
+      q = document.getElementById('q'), go = document.getElementById('go');
+const history = [];
+function add(cls, text){ const d=document.createElement('div'); d.className='msg '+cls; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; return d; }
+function meta(text){ const d=document.createElement('div'); d.className='meta'; d.textContent=text; log.appendChild(d); log.scrollTop=log.scrollHeight; }
+f.addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const text = q.value.trim(); if(!text) return;
+  q.value=''; go.disabled=true;
+  add('user', text);
+  history.push({role:'user', content:text});
+  const wait = add('bot',''); wait.innerHTML='<span class="dot"></span>';
+  try{
+    const r = await fetch(FN, {method:'POST',
+      headers:{'content-type':'application/json','x-scintilla':GATE},
+      body: JSON.stringify({messages: history.slice(-20), scope: SCOPE, conversation_id: CONVO})});
+    const j = await r.json();
+    wait.remove();
+    if(j.reply){
+      const d=document.createElement('div'); d.className='msg bot';
+      d.innerHTML = DOMPurify.sanitize(marked.parse(j.reply));
+      log.appendChild(d); log.scrollTop=log.scrollHeight;
+      history.push({role:'assistant', content:j.reply});
+      if(j.queries && j.queries.length) meta(j.queries.length+' quer'+(j.queries.length>1?'ies':'y')+' · '+j.queries.map(x=>x.rows+' rows').join(' · '));
+    } else {
+      add('bot err', 'Error: '+(j.error||'unknown')+(j.detail?(' — '+j.detail):''));
+    }
+  }catch(err){ wait.remove(); add('bot err','Network error: '+err.message); }
+  go.disabled=false; q.focus();
+});
+</script>
+</body>
+</html>

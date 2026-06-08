@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SCINTILLA · COMPANY PAGE</title>
+<style>
+:root{--bg:#0A0A0F;--line:#1A1A2A;--line2:#252538;--crk:#00D4FF;--amber:#F59E0B;--sv1:#00FFA3;--sv5:#FF3060;--ink:#E8E8F0;--ink2:#A0A0C0;--ink3:#7A7A95;--dim:#4A4A6A;--es:rgba(0,212,255,.22);--em:rgba(0,212,255,.18);--mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;--sans:ui-sans-serif,-apple-system,"Helvetica Neue",sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{max-width:900px;margin:0 auto;padding:18px 15px 50px;font-size:12px}
+@keyframes breathe{0%,100%{filter:drop-shadow(0 0 2px rgba(0,212,255,.5))}50%{filter:drop-shadow(0 0 5px rgba(0,212,255,.75))}}
+@keyframes whisper{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.35}}
+.stamp{font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:12px}
+.stamp a{color:var(--dim);text-decoration:none}.stamp a:hover{color:var(--crk)}
+.head{border:0.8px solid var(--em);padding:13px 16px;margin-bottom:10px;display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.br{animation:breathe 4.2s ease-in-out infinite}
+.tk{font-family:var(--sans);font-weight:700;font-size:18px}
+.live{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:8px;letter-spacing:.18em;color:var(--sv1);text-transform:uppercase}
+.live i{width:6px;height:6px;border-radius:50%;background:var(--sv1);box-shadow:0 0 6px var(--sv1);animation:whisper 1.6s infinite}
+.id{margin-left:auto;text-align:right;font-family:var(--mono)}.id .px{font-size:20px;font-weight:700}.id .ch{font-size:9px;color:var(--ink3)}
+.statline{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:9px;color:var(--ink3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px}
+.statline b{color:var(--ink2)}
+.banner{border:0.8px solid var(--es);padding:11px 15px;margin-bottom:14px;display:flex;align-items:center;gap:12px;font-family:var(--mono)}
+.banner .lab{font-size:8px;letter-spacing:.22em;color:var(--ink3);text-transform:uppercase}
+.banner .state{font-size:14px;font-weight:700;letter-spacing:.12em}
+.banner .rv{margin-left:auto;font-size:10px;color:var(--ink2)}
+.sechead{display:flex;align-items:center;gap:10px;margin-bottom:11px}
+.sechead .n{font-family:var(--mono);font-size:7.5px;color:var(--dim);letter-spacing:.2em}
+.sechead .t{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;color:var(--ink);text-transform:uppercase}
+.sechead .rule{flex:1;height:1px;background:linear-gradient(90deg,rgba(0,212,255,.18),transparent)}
+.sechead .meta{font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase}
+.sechead .meta.lv{color:var(--sv1)}
+.zone{border:0.8px solid var(--es);padding:15px;margin-bottom:22px}
+#ch{height:380px;width:100%}
+.leg{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-top:9px}
+.leg i{display:inline-block;width:13px;height:3px;border-radius:2px;vertical-align:2px;margin-right:4px}
+.chips{display:flex;gap:12px;flex-wrap:wrap}
+.chip{border:0.8px solid var(--line);border-radius:3px;padding:9px 13px;font-family:var(--mono);min-width:110px}
+.chip .k{font-size:7.5px;letter-spacing:.16em;color:var(--ink3);text-transform:uppercase}
+.chip .v{font-size:16px;font-weight:700;margin-top:4px}
+.chip .s{font-size:7.5px;color:var(--dim);margin-top:3px;text-transform:uppercase}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:0 26px}@media(max-width:560px){.stats{grid-template-columns:1fr}}
+.st{display:flex;justify-content:space-between;padding:7px 0;border-bottom:0.6px dashed var(--line);font-family:var(--mono);font-size:9.5px}.st .k{color:var(--ink3)}.st .v{color:var(--ink);font-weight:600}
+.dialwrap{display:flex;gap:20px;align-items:center;flex-wrap:wrap}
+.dialbig{font-family:var(--mono);font-weight:700;font-size:38px;line-height:1}
+.dialreg{font-family:var(--mono);font-size:9px;letter-spacing:.2em;text-transform:uppercase;margin-top:5px}
+.meter{flex:1;min-width:200px}
+.mtrack{position:relative;height:10px;border-radius:5px;background:linear-gradient(90deg,#FF3060,#5a2030 28%,#2A2A3A 50%,#1f4a36 72%,#00FFA3)}
+.mneedle{position:absolute;top:-5px;width:3px;height:20px;border-radius:2px;background:#fff;box-shadow:0 0 9px #fff;transform:translateX(-50%)}
+.mlbl{display:flex;justify-content:space-between;font-family:var(--mono);font-size:7px;color:var(--dim);margin-top:7px;text-transform:uppercase}
+.lad{margin-bottom:18px}
+.ladh{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ladh .nm{font-family:var(--mono);font-size:9px;letter-spacing:.14em;color:var(--ink);text-transform:uppercase;font-weight:700}
+.ladh .desc{font-family:var(--mono);font-size:7.5px;color:var(--ink3)}
+.ladh .val{margin-left:auto;font-family:var(--mono);font-size:10px;font-weight:700}
+.ladsvg{width:100%;display:block}
+.ladx{font-family:var(--mono);font-size:6.5px;color:var(--dim);text-transform:uppercase;margin:4px 0 0 41px;display:flex;justify-content:space-between}
+.lleg{display:flex;gap:14px;flex-wrap:wrap;font-family:var(--mono);font-size:7px;color:var(--ink3);text-transform:uppercase;margin-top:6px}
+.lleg i{display:inline-block;width:9px;height:9px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+.rules{font-family:var(--mono);font-size:8px;color:var(--ink3);line-height:1.7;margin-top:10px;border-top:0.6px solid var(--line);padding-top:9px}
+.rules b{color:var(--ink2)}
+.al{display:grid;grid-template-columns:9px 54px 1fr auto;gap:10px;align-items:center;padding:9px 4px;border-bottom:0.6px solid var(--line);font-family:var(--mono)}.al:last-child{border-bottom:none}.al .dot{width:7px;height:7px;border-radius:50%}.al .tkr{font-weight:700;font-size:11px;color:var(--ink)}.al .msg{font-size:9px;color:var(--ink3);text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.al .z{font-size:9px;font-weight:700}
+.newsrow{padding:8px 2px;border-bottom:0.6px solid var(--line);font-family:var(--mono)}
+.newsrow:last-child{border-bottom:none}
+.newsrow a{color:var(--ink2);text-decoration:none;font-size:10px}.newsrow a:hover{color:var(--crk)}
+.newsrow .src{font-size:7.5px;color:var(--dim);text-transform:uppercase;margin-top:2px}
+.foot{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;color:var(--dim);text-align:center;margin-top:16px;text-transform:uppercase}
+.err{color:var(--sv5);font-family:var(--mono);font-size:9px}
+.chatlink{font-family:var(--mono);font-size:9px;color:var(--crk);text-decoration:none;letter-spacing:.1em;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div class="stamp"><span><a href="index.html">SCINTILLA</a> · <span id="stk">—</span> · COMPANY PAGE</span><span>v0.1 · LIVE LADDERS · ALL TICKERS</span></div>
+
+<div class="head">
+  <svg class="br" width="20" height="20" viewBox="0 0 96 96" fill="none"><circle cx="48" cy="48" r="4" fill="#00D4FF"/><path d="M 32.5 27.8 A 22 22 0 0 1 63.5 27.8" stroke="#00D4FF" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M 32.5 27.8 A 22 22 0 0 1 63.5 27.8" stroke="#00D4FF" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85" transform="rotate(120 48 48)"/><path d="M 32.5 27.8 A 22 22 0 0 1 63.5 27.8" stroke="#00D4FF" stroke-width="5" stroke-linecap="round" fill="none" opacity=".70" transform="rotate(240 48 48)"/></svg>
+  <span class="tk" id="tkname">—</span>
+  <span class="live"><i></i><span id="livelab">LIVE</span></span>
+  <span class="id"><div class="px" id="px">—</div><div class="ch" id="upd">connecting…</div></span>
+</div>
+<div class="statline" id="stats"><span>loading…</span></div>
+
+<div class="banner"><span class="lab">Volume</span><span class="state" id="vstate" style="color:var(--dim)">—</span><span class="rv" id="rvol">RVOL —</span></div>
+
+<div class="sechead"><span class="n">01</span><span class="t">Live Chart</span><span class="rule"></span><span class="meta lv" id="chartmeta">1H · EMA 21/50</span></div>
+<div class="zone">
+  <div id="ch"></div>
+  <div class="leg"><span><i style="background:#00FFA3"></i>up</span><span><i style="background:#FF3060"></i>down</span><span><i style="background:#C8FF00"></i>EMA 21</span><span><i style="background:#00D4FF"></i>EMA 50</span><span><i style="background:#3A3A52"></i>volume pane</span></div>
+</div>
+
+<div class="sechead"><span class="n">02</span><span class="t">Live Momentum</span><span class="rule"></span><span class="meta lv">LIVE</span></div>
+<div class="zone"><div class="chips" id="chips">
+  <div class="chip"><div class="k">RSI · 1H</div><div class="v" id="rsi1h">—</div><div class="s" id="rsi1hs">live</div></div>
+  <div class="chip"><div class="k">RSI · 1D</div><div class="v" id="rsi1d">—</div><div class="s" id="rsi1ds">live</div></div>
+  <div class="chip"><div class="k">Volume · last bar</div><div class="v" id="v24">—</div><div class="s" id="v24s">1H</div></div>
+  <div class="chip"><div class="k">Range · session</div><div class="v" id="rng" style="font-size:11px">—</div><div class="s">from bars</div></div>
+</div></div>
+
+<div class="sechead"><span class="n">03</span><span class="t">Gradient Ladders · all TFs</span><span class="rule"></span><span class="meta lv">computed from real bars · 3-day span</span></div>
+<div class="zone">
+  <div id="ladders"><div class="err" style="color:var(--ink3)">computing ladders…</div></div>
+  <div class="lleg"><span><i style="background:#00FFA3"></i>bullish this TF</span><span><i style="background:#FF3060"></i>bearish this TF</span><span><i style="background:repeating-linear-gradient(45deg,#1f2a24,#1f2a24 2px,#142019 2px,#142019 4px)"></i>NET split</span></div>
+  <div class="rules"><b>Live rules (interim until the official gradient streams):</b> TREND = close vs EMA21 · MOMENTUM = RSI14 vs 50 · VOLATILITY = ATR14 vs 50-bar median · VOLUME = OBV 5-bar slope · PRICE = close vs SMA20. Crypto cells from Coinbase bars; equities from the SCINTILLA cloud bars (RTH, session-anchored). Same wall-clock span every row.</div>
+</div>
+
+<div class="sechead"><span class="n">04</span><span class="t">Key Stats</span><span class="rule"></span><span class="meta lv">LIVE · company_profile</span></div>
+<div class="zone"><div class="stats" id="keystats"><div class="st"><span class="k">loading…</span><span class="v"></span></div></div></div>
+
+<div class="sechead"><span class="n">05</span><span class="t">Stretch Dial · EMA21 composite</span><span class="rule"></span><span class="meta lv">LIVE · stat_read avg 4H/D/3D/W · official gradient when math lands</span></div>
+<div class="zone"><div class="dialwrap">
+  <div><div class="dialbig" id="dialv" style="color:var(--dim)">—</div><div class="dialreg" id="dialr" style="color:var(--dim)">loading</div></div>
+  <div class="meter"><div class="mtrack"><div class="mneedle" id="needle" style="left:50%"></div></div><div class="mlbl"><span>−1 stretched down</span><span>0 neutral</span><span>+1 stretched up</span></div></div>
+</div></div>
+
+<div class="sechead"><span class="n">06</span><span class="t">RSI · by timeframe</span><span class="rule"></span><span class="meta lv">LIVE · statistics table</span></div>
+<div class="zone"><div class="chips" id="rsirow"><div class="chip"><div class="k">loading…</div></div></div></div>
+
+<div class="sechead"><span class="n">07</span><span class="t">News</span><span class="rule"></span><span class="meta lv">LIVE · news table</span></div>
+<div class="zone" id="newszone"><div class="err" style="color:var(--ink3)">loading news…</div></div>
+
+<div class="sechead"><span class="n">08</span><span class="t">Alerts · latest</span><span class="rule"></span><span class="meta lv">LIVE · alert_log</span></div>
+<div class="zone" id="alerts"><div class="err" style="color:var(--ink3)">loading alerts…</div></div>
+
+<div style="text-align:center;margin:8px 0 4px"><a class="chatlink" id="desklink" href="chat.html" target="_blank">→ open this ticker's desk agent</a></div>
+<script>document.addEventListener('DOMContentLoaded',function(){var Q=new URLSearchParams(location.search);var t=(Q.get('t')||'BTCUSD').toUpperCase();document.getElementById('desklink').href='chat.html?t='+t;});</script>
+<div class="foot">crypto: price ticks realtime · equities: bars from the scintilla cloud · panels recompute 60s · never less than before</div>
+
+<script src="https://unpkg.com/lightweight-charts@4.1.3/dist/lightweight-charts.standalone.production.js"></script>
+<script>
+var Q=new URLSearchParams(location.search);
+var TICKER=(Q.get('t')||'BTCUSD').toUpperCase();
+var IS_CRYPTO=/USD$/.test(TICKER);
+var CB=IS_CRYPTO?('https://api.exchange.coinbase.com/products/'+TICKER.replace('USD','-USD')):null;
+var SB='https://wadinxqplrggagkvrdag.supabase.co/rest/v1';
+var KEY='sb_publishable_AutibLpFtTns-WHAg67Pvw_I0HmjqE9';
+document.getElementById('stk').textContent=TICKER;
+document.getElementById('tkname').textContent=TICKER;
+document.getElementById('livelab').textContent=IS_CRYPTO?'LIVE · price ticks · ladders recompute 60s':'CLOUD BARS · panels recompute 60s';
+document.title='SCINTILLA · '+TICKER;
+
+async function pg(path){var r=await fetch(SB+path,{headers:{apikey:KEY,Authorization:'Bearer '+KEY}});if(!r.ok)throw new Error('db '+r.status);return r.json();}
+var chart,cs,e21s,e50s,vols;
+function ema(v,p){var k=2/(p+1),o=[],pr;v.forEach(function(x,i){pr=i?(x*k+pr*(1-k)):x;o.push(pr);});return o;}
+function rsiSeries(cl,p){p=p||14;var out=new Array(cl.length).fill(null);if(cl.length<p+1)return out;var g=0,l=0;for(var i=1;i<=p;i++){var d=cl[i]-cl[i-1];if(d>0)g+=d;else l-=d;}g/=p;l/=p;out[p]=100-100/(1+(l===0?1e9:g/l));for(var i=p+1;i<cl.length;i++){var d=cl[i]-cl[i-1];g=(g*(p-1)+(d>0?d:0))/p;l=(l*(p-1)+(d<0?-d:0))/p;out[i]=100-100/(1+(l===0?1e9:g/l));}return out;}
+function atrSeries(b,p){p=p||14;var tr=b.map(function(x,i){if(!i)return x.high-x.low;var pc=b[i-1].close;return Math.max(x.high-x.low,Math.abs(x.high-pc),Math.abs(x.low-pc));});var out=new Array(b.length).fill(null);if(b.length<p+1)return out;var a=0;for(var i=1;i<=p;i++)a+=tr[i];a/=p;out[p]=a;for(var i=p+1;i<b.length;i++){a=(a*(p-1)+tr[i])/p;out[i]=a;}return out;}
+function smaSeries(cl,p){var out=new Array(cl.length).fill(null),s=0;for(var i=0;i<cl.length;i++){s+=cl[i];if(i>=p)s-=cl[i-p];if(i>=p-1)out[i]=s/p;}return out;}
+function obvSeries(b){var out=[0];for(var i=1;i<b.length;i++){var d=b[i].close-b[i-1].close;out.push(out[i-1]+(d>0?b[i].vol:d<0?-b[i].vol:0));}return out;}
+function median(a){var s=a.filter(function(x){return x!=null;}).slice().sort(function(x,y){return x-y;});return s.length?s[Math.floor(s.length/2)]:null;}
+function resample(b,k){var out=[];for(var i=0;i+k<=b.length;i+=k){var g=b.slice(i,i+k);out.push({time:g[0].time,open:g[0].open,high:Math.max.apply(null,g.map(function(x){return x.high;})),low:Math.min.apply(null,g.map(function(x){return x.low;})),close:g[g.length-1].close,vol:g.reduce(function(s,x){return s+x.vol;},0),dur:k*(b[1]?b[1].time-b[0].time:3600)});}return out;}
+function withDur(b,d){b.forEach(function(x){x.dur=d;});return b;}
+function cellSeries(b){var cl=b.map(function(x){return x.close;});var E=ema(cl,21),R=rsiSeries(cl,14),A=atrSeries(b,14),S=smaSeries(cl,20),O=obvSeries(b);
+ return b.map(function(x,i){var am=(i>=50)?median(A.slice(i-50,i)):null;
+  return {time:x.time,dur:x.dur,
+   TREND:E[i]!=null?(x.close>E[i]):null,
+   MOMENTUM:R[i]!=null?(R[i]>=50):null,
+   VOLATILITY:(A[i]!=null&&am!=null)?(A[i]>am):null,
+   VOLUME:(i>=5)?((O[i]-O[i-5])>=0):null,
+   PRICE:S[i]!=null?(x.close>S[i]):null};});}
+function fmtCap(n){return n>=1e12?('$'+(n/1e12).toFixed(2)+'T'):n>=1e9?('$'+(n/1e9).toFixed(2)+'B'):n>=1e6?('$'+(n/1e6).toFixed(1)+'M'):n!=null?('$'+Math.round(n).toLocaleString()):'—';}
+function fmtPx(v){return v>=1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):v>=10?v.toFixed(2):(+v).toFixed(4);}
+function initChart(){var el=document.getElementById('ch');
+ chart=LightweightCharts.createChart(el,{layout:{background:{color:'#0A0A0F'},textColor:'#A0A0C0',fontFamily:'SF Mono, ui-monospace, monospace',fontSize:10},grid:{vertLines:{color:'rgba(26,26,42,.55)'},horzLines:{color:'rgba(26,26,42,.55)'}},rightPriceScale:{borderColor:'#1A1A2A'},timeScale:{borderColor:'#1A1A2A',timeVisible:true},crosshair:{vertLine:{color:'#00D4FF',width:1,labelBackgroundColor:'#0D1118'},horzLine:{color:'#00D4FF',width:1,labelBackgroundColor:'#0D1118'}},width:el.clientWidth,height:380});
+ cs=chart.addCandlestickSeries({upColor:'#00FFA3',downColor:'#FF3060',wickUpColor:'#00FFA3',wickDownColor:'#FF3060',borderVisible:false});
+ e21s=chart.addLineSeries({color:'#C8FF00',lineWidth:1,priceLineVisible:false,lastValueVisible:false});
+ e50s=chart.addLineSeries({color:'#00D4FF',lineWidth:2,priceLineVisible:false,lastValueVisible:false});
+ vols=chart.addHistogramSeries({priceFormat:{type:'volume'},priceScaleId:''});
+ vols.priceScale().applyOptions({scaleMargins:{top:0.82,bottom:0}});
+ window.addEventListener('resize',function(){chart.applyOptions({width:el.clientWidth});});}
+function drawLadders(m15,h1,d1){
+ var SPAN=72*3600,NOW=Math.floor(Date.now()/1000),T0=NOW-SPAN;
+ var TFs=[['15m',withDur(m15.slice(),900)],['30m',resample(m15,2)],['1H',withDur(h1.slice(),3600)],['2H',resample(h1,2)],['3H',resample(h1,3)],['4H',resample(h1,4)],['1D',withDur(d1.slice(),86400)],['3D',resample(d1,3)],['1W',resample(d1,7)]];
+ var METS=[['TREND','close vs EMA21'],['MOMENTUM','RSI14 vs 50'],['VOLATILITY','ATR14 vs 50-bar median'],['VOLUME','OBV 5-bar slope'],['PRICE','close vs SMA20']];
+ var series=TFs.map(function(t){return {n:t[0],cells:cellSeries(t[1])};});
+ var html='';
+ METS.forEach(function(M){
+  var key=M[0],rows='',W=1000,RH=10,GAP=2;
+  var bullNow=0,tot=0;
+  series.forEach(function(s,si){
+   var y=si*(RH+GAP);
+   s.cells.forEach(function(c){
+    if(c.time+(c.dur||3600)<T0||c[key]==null)return;
+    var x=Math.max(0,(c.time-T0)/SPAN*W);var w=Math.max(1,((c.dur||3600))/SPAN*W);
+    if(x>=W)return;if(x+w>W)w=W-x;
+    rows+='<rect x="'+x.toFixed(1)+'" y="'+y+'" width="'+Math.max(0.8,w-0.6).toFixed(1)+'" height="'+RH+'" rx="0.5" fill="'+(c[key]?'#00FFA3':'#FF3060')+'"/>';
+   });
+   var last=s.cells[s.cells.length-1];
+   if(last&&last[key]!=null){tot++;if(last[key])bullNow++;}
+  });
+  var ny=series.length*(RH+GAP)+3;
+  for(var hh=0;hh<72;hh++){var t=T0+hh*3600+1800,g=0,n=0;
+   series.forEach(function(s){for(var i=s.cells.length-1;i>=0;i--){var c=s.cells[i];if(c.time<=t&&t<c.time+(c.dur||3600)){if(c[key]!=null){n++;if(c[key])g++;}break;}}});
+   var col=n?(g/n>=0.56?'#00FFA3':g/n<=0.44?'#FF3060':'#3a4a40'):'#1A1A2A';
+   var x=hh/72*1000;
+   rows+='<rect x="'+x.toFixed(1)+'" y="'+ny+'" width="'+(1000/72-0.8).toFixed(1)+'" height="13" rx="0.5" fill="'+col+'"'+(n&&g/n<0.56&&g/n>0.44?' opacity="0.85"':'')+'/>';
+  }
+  var totalH=ny+16;
+  var labels=series.map(function(s){return '<div style="height:'+(RH+GAP)+'px;line-height:'+RH+'px">'+s.n+'</div>';}).join('')+'<div style="height:16px;line-height:14px;color:#00D4FF;margin-top:3px">NET</div>';
+  var col=tot&&bullNow/tot>=0.5?'#00FFA3':'#FF3060';
+  html+='<div class="lad"><div class="ladh"><span class="nm">'+key+'</span><span class="desc">'+M[1]+'</span><span class="val" style="color:'+col+'">'+bullNow+'/'+tot+' TF bull now</span></div>'
+   +'<div style="display:flex;gap:7px"><div style="width:34px;flex:none;font-family:var(--mono);font-size:7px;color:#A0A0C0;text-transform:uppercase;text-align:right">'+labels+'</div>'
+   +'<svg class="ladsvg" viewBox="0 0 1000 '+totalH+'" preserveAspectRatio="none" style="height:'+totalH+'px;flex:1">'+rows+'</svg></div>'
+   +'<div class="ladx"><span>← 72h ago</span><span>now</span></div></div>';
+ });
+ document.getElementById('ladders').innerHTML=html;
+}
+async function cbBars(g){var r=await fetch(CB+'/candles?granularity='+g);var j=await r.json();return j.map(function(c){return {time:c[0],low:c[1],high:c[2],open:c[3],close:c[4],vol:c[5]};}).sort(function(a,b){return a.time-b.time;});}
+async function dbBars(tf,limit){var rows=await pg('/ohlcv_history?select=timestamp,open,high,low,close,volume&ticker=eq.'+TICKER+'&tf=eq.'+tf+'&order=timestamp.desc&limit='+limit);
+ return rows.map(function(r){return {time:r.timestamp,open:r.open,high:r.high,low:r.low,close:r.close,vol:r.volume||0};}).sort(function(a,b){return a.time-b.time;});}
+async function getAll(){if(IS_CRYPTO){var h1=await cbBars(3600),m15=await cbBars(900),d1=await cbBars(86400);return [m15,h1,d1];}
+ var res=await Promise.all([dbBars('15',400),dbBars('60',360),dbBars('D',420)]);return res;}
+async function load(){
+ try{
+  var all=await getAll();var m15=all[0],h1=all[1],d1=all[2];
+  if(!h1.length){document.getElementById('upd').innerHTML='<span class="err">no bars for '+TICKER+'</span>';return;}
+  var closes=h1.map(function(b){return b.close;});
+  cs.setData(h1.map(function(b){return {time:b.time,open:b.open,high:b.high,low:b.low,close:b.close};}));
+  var E21=ema(closes,21),E50=ema(closes,50);
+  e21s.setData(h1.map(function(b,i){return {time:b.time,value:E21[i]};}));
+  e50s.setData(h1.map(function(b,i){return {time:b.time,value:E50[i]};}));
+  vols.setData(h1.map(function(b){return {time:b.time,value:b.vol,color:(b.close>=b.open)?'rgba(0,255,163,.35)':'rgba(255,48,96,.35)'};}));
+  var n=h1.length,last=h1[n-1],prev=h1.slice(Math.max(0,n-21),n-1);
+  var avg=prev.reduce(function(s,b){return s+b.vol;},0)/(prev.length||1),rv=avg?last.vol/avg:0;
+  document.getElementById('rvol').textContent='RVOL '+rv.toFixed(2)+'× vs 20-bar avg · 1H';
+  var st=document.getElementById('vstate'),s,c,bl=false;
+  if(rv<0.7){s='THIN';c='#4A4A6A';}else if(rv<1.5){s='NORMAL';c='#A0A0C0';}else if(rv<2){s='ELEVATED';c='#FFE500';}else if(rv<3){s='VOLUME COMING IN';c='#FF8A00';}else{s='CLIMAX';c='#FF3060';bl=true;}
+  st.textContent=s;st.style.color=c;st.style.animation=bl?'blink 1s infinite':'none';
+  var R=rsiSeries(closes,14),r1=R[R.length-1];
+  var el1=document.getElementById('rsi1h');el1.textContent=r1?r1.toFixed(1):'—';el1.style.color=r1>=70?'#00FFA3':r1<=30?'#FF3060':'#E8E8F0';
+  document.getElementById('rsi1hs').textContent=r1>=70?'overbought':r1<=30?'oversold':'neutral';
+  if(!window.__ws_live){document.getElementById('px').textContent=fmtPx(last.close);}
+  document.getElementById('upd').textContent='panels updated '+new Date().toLocaleTimeString();
+  drawLadders(m15,h1,d1);
+  var RD=rsiSeries(d1.map(function(b){return b.close;}),14),rd=RD[RD.length-1];
+  var el2=document.getElementById('rsi1d');el2.textContent=rd?rd.toFixed(1):'—';el2.style.color=rd>=70?'#00FFA3':rd<=30?'#FF3060':'#E8E8F0';
+  document.getElementById('rsi1ds').textContent=rd>=70?'overbought':rd<=30?'oversold':'neutral';
+  document.getElementById('v24').textContent=last.vol>=1e6?(last.vol/1e6).toFixed(1)+'M':Math.round(last.vol).toLocaleString();
+  var dh=Math.max.apply(null,h1.slice(-24).map(function(b){return b.high;}));
+  var dl=Math.min.apply(null,h1.slice(-24).map(function(b){return b.low;}));
+  document.getElementById('rng').textContent=fmtPx(dl)+'–'+fmtPx(dh);
+  document.getElementById('stats').innerHTML='<span>Last <b>'+fmtPx(last.close)+'</b></span><span>24-bar High <b>'+fmtPx(dh)+'</b></span><span>24-bar Low <b>'+fmtPx(dl)+'</b></span><span>Bars <b>'+n+' × 1H</b></span>';
+ }catch(e){document.getElementById('upd').innerHTML='<span class="err">feed error · retrying</span>';}
+}
+async function loadCloud(){
+ try{
+  var prof=await pg('/company_profile?ticker=eq.'+TICKER+'&limit=1');var p=prof[0]||{};
+  if(p.name)document.getElementById('tkname').textContent=TICKER+' · '+p.name;
+  var ks='';
+  function row(k,v){return '<div class="st"><span class="k">'+k+'</span><span class="v">'+v+'</span></div>';}
+  ks+=row('Market Cap',p.market_cap?fmtCap(p.market_cap):'—');
+  ks+=row('Sector',(p.sector||'—'));
+  ks+=row('Industry',(p.industry||'—'));
+  ks+=row('Beta',p.beta!=null?(+p.beta).toFixed(2):'—');
+  ks+=row('52-Wk Range',p.range_52wk||'—');
+  ks+=row('Avg Volume',p.avg_volume?(+p.avg_volume>=1e6?((+p.avg_volume)/1e6).toFixed(1)+'M':Math.round(+p.avg_volume).toLocaleString()):'—');
+  ks+=row('Shares Out',p.shares_out?fmtCap(p.shares_out).replace('$',''):'—');
+  ks+=row('Exchange',p.exchange||'—');
+  document.getElementById('keystats').innerHTML=ks;
+ }catch(e){}
+ try{
+  var sr=await pg('/statistics?select=tf,stat_read&ticker=eq.'+TICKER+'&name=eq.EMA21&tf=in.(240,D,3D,W)');
+  if(sr.length){
+   var avg=sr.reduce(function(s,x){return s+(x.stat_read||0);},0)/sr.length;
+   var col=avg<=-0.4?'#FF3060':avg>=0.4?'#00FFA3':'#FFE500';
+   var reg=avg<=-0.6?'STRETCHED DOWN · STRONG':avg<=-0.25?'STRETCHED DOWN':avg>=0.6?'STRETCHED UP · STRONG':avg>=0.25?'STRETCHED UP':'NEUTRAL';
+   var dv=document.getElementById('dialv');dv.textContent=(avg>0?'+':'')+avg.toFixed(2);dv.style.color=col;dv.style.textShadow='0 0 16px '+col+'55';
+   var dr=document.getElementById('dialr');dr.textContent=reg;dr.style.color=col;
+   document.getElementById('needle').style.left=((avg+1)/2*100).toFixed(1)+'%';
+  }
+ }catch(e){}
+ try{
+  var rs=await pg('/statistics?select=tf,current,percentile&ticker=eq.'+TICKER+'&name=eq.RSI14&tf=in.(15,30,60,120,180,240,D,3D,W)');
+  var order=['15','30','60','120','180','240','D','3D','W'];
+  var lbl={15:'15m',30:'30m',60:'1H',120:'2H',180:'3H',240:'4H',D:'1D','3D':'3D',W:'1W'};
+  rs.sort(function(a,b){return order.indexOf(a.tf)-order.indexOf(b.tf);});
+  var h='';
+  rs.forEach(function(r){
+   var col=r.current>=70?'#00FFA3':r.current<=30?'#FF3060':'#E8E8F0';
+   h+='<div class="chip" style="min-width:84px"><div class="k">'+(lbl[r.tf]||r.tf)+'</div><div class="v" style="color:'+col+'">'+(r.current!=null?(+r.current).toFixed(1):'—')+'</div><div class="s">'+(r.percentile!=null?Math.round(r.percentile)+'th pctile':'')+'</div></div>';
+  });
+  document.getElementById('rsirow').innerHTML=h||'<div class="err" style="color:var(--ink3)">no RSI baselines yet</div>';
+ }catch(e){}
+ try{
+  var nws=await pg('/news?select=title,site,url,published_ts&ticker=eq.'+TICKER+'&order=published_ts.desc.nullslast&limit=7');
+  var h2='';
+  nws.forEach(function(x){var d=x.published_ts?new Date(x.published_ts*1000).toISOString().slice(0,10):'';
+   h2+='<div class="newsrow"><a href="'+x.url+'" target="_blank" rel="noopener">'+x.title+'</a><div class="src">'+(x.site||'')+' '+d+'</div></div>';});
+  document.getElementById('newszone').innerHTML=h2||'<div class="err" style="color:var(--ink3)">no stored news for '+TICKER+'</div>';
+ }catch(e){}
+ try{
+  var als=await pg('/alert_log?select=ticker,kind,severity,message,ts&ticker=eq.'+TICKER+'&order=ts.desc&limit=8');
+  if(!als.length){als=await pg('/alert_log?select=ticker,kind,severity,message,ts&order=ts.desc&limit=8');}
+  var h3='';
+  als.forEach(function(a){var col=a.severity>=2?'#FF3060':a.severity>=1?'#FFE500':'#7A7A95';
+   var when=a.ts?new Date(a.ts*1000).toLocaleDateString():'';
+   h3+='<div class="al"><span class="dot" style="background:'+col+';box-shadow:0 0 5px '+col+'"></span><span class="tkr">'+a.ticker+'</span><span class="msg">'+(a.kind?a.kind+': ':'')+(a.message||'')+'</span><span class="z" style="color:'+col+'">'+when+'</span></div>';});
+  document.getElementById('alerts').innerHTML=h3||'<div class="err" style="color:var(--ink3)">no alerts</div>';
+ }catch(e){}
+}
+function tick(){if(!IS_CRYPTO)return;
+ try{var ws=new WebSocket('wss://ws-feed.exchange.coinbase.com');
+ ws.onopen=function(){window.__ws_live=true;ws.send(JSON.stringify({type:'subscribe',product_ids:[TICKER.replace('USD','-USD')],channels:['ticker']}));};
+ ws.onmessage=function(e){var m=JSON.parse(e.data);if(m.type==='ticker'&&m.price){document.getElementById('px').textContent=fmtPx(+m.price);document.getElementById('upd').textContent='tick '+new Date().toLocaleTimeString();}};
+ ws.onclose=function(){window.__ws_live=false;setTimeout(tick,5000);};ws.onerror=function(){try{ws.close();}catch(x){}};
+}catch(e){}}
+function start(){if(!window.LightweightCharts){return setTimeout(start,80);}initChart();load();loadCloud();setInterval(load,60000);setInterval(loadCloud,120000);tick();}
+start();
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+  "name": "SCINTILLA",
+  "short_name": "SCINTILLA",
+  "description": "Market depth platform — dashboard, company pages, market chat",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#0A0A0F",
+  "theme_color": "#0A0A0F",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

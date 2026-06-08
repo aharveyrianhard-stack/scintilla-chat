@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>SCINTILLA — Ladder Color Sandbox v2 · one zoom dial</title>
+<style>
+  :root{ --bg:#0e1116; --panel:#161b22; --ink:#e6edf3; --mut:#8b949e; --line:#30363d; --cyan:#00D4FF; }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 -apple-system,Segoe UI,Roboto,sans-serif}
+  header{padding:14px 18px;border-bottom:1px solid var(--line)}
+  header h1{margin:0;font-size:16px;font-weight:600}
+  header p{margin:4px 0 0;color:var(--mut);font-size:12px}
+  .wrap{display:flex;gap:0;height:calc(100vh - 64px)}
+  .controls{width:320px;min-width:320px;padding:16px;border-right:1px solid var(--line);overflow:auto}
+  .stage{flex:1;position:relative}
+  canvas{width:100%;height:100%;display:block}
+  .grp{margin-bottom:18px}
+  .grp h3{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+  label.row{display:flex;align-items:center;gap:8px;margin:6px 0;cursor:pointer}
+  input[type=range]{width:100%}
+  select,button{background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 8px;font-size:13px}
+  button{cursor:pointer}
+  .val{color:var(--mut);font-variant-numeric:tabular-nums}
+  .bigval{font-size:22px;font-weight:700;color:var(--cyan);font-variant-numeric:tabular-nums}
+  .legend{position:absolute;top:10px;right:12px;background:rgba(22,27,34,.85);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:11px;max-width:200px}
+  .sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:-1px}
+  .note{color:var(--mut);font-size:11px;margin-top:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>SCINTILLA — Ladder Color Sandbox <span style="color:var(--cyan)">v2</span></h1>
+  <p>One <b>zoom dial</b>. Drag it and watch the 44 rungs recolor continuously — zoom is zoom, a gradient, not a menu. Visualization toy only — nothing here is code.</p>
+</header>
+<div class="wrap">
+  <div class="controls">
+    <div class="grp">
+      <h3>Zoom · one dial</h3>
+      <div class="bigval" id="zoomV">1H</div>
+      <input type="range" id="zoom" min="-1.78" max="2.36" step="0.01" value="0">
+      <div class="note" id="zoomNote">drag freely — between the named TFs is allowed, that's the point</div>
+    </div>
+
+    <div class="grp">
+      <h3>Focus width</h3>
+      <input type="range" id="width" min="0.5" max="2.5" step="0.05" value="1.3"><span class="val" id="widthV"></span>
+      <div class="note">how wide the "in play" window is around the sweet spot — one knob, not two</div>
+    </div>
+
+    <div class="grp">
+      <h3>Color lens</h3>
+      <label class="row"><input type="radio" name="lens" value="span" checked> Span — relevance to the view (the zoom lens)</label>
+      <label class="row"><input type="radio" name="lens" value="dist"> Distance from price</label>
+      <label class="row"><input type="radio" name="lens" value="sep"> Separation / fan-out</label>
+      <label class="row"><input type="radio" name="lens" value="slope"> Slope / activity</label>
+    </div>
+
+    <div class="grp">
+      <h3>Mapping</h3>
+      <label class="row"><input type="checkbox" id="discrete" checked> Discrete buckets (off = continuous)</label>
+      <label class="row"><input type="checkbox" id="fade" checked> Fade out-of-range</label>
+      <label class="row"><input type="checkbox" id="keybold" checked> Daily 5/9/21 always bold</label>
+    </div>
+
+    <div class="grp">
+      <button id="regen">↻ New random price</button>
+    </div>
+    <div class="note" id="stat"></div>
+  </div>
+  <div class="stage">
+    <canvas id="cv"></canvas>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+<script>
+const RUNGS = [
+ ["5·1m",0.083,"EMA"],["9·1m",0.15,"EMA"],["5·3m",0.25,"EMA"],["21·1m",0.35,"EMA"],
+ ["5·5m",0.417,"EMA"],["9·3m",0.45,"EMA"],["9·5m",0.75,"EMA"],["5·10m",0.833,"EMA"],
+ ["21·3m",1.05,"EMA"],["5·15m",1.25,"EMA"],["9·10m",1.5,"EMA"],["21·5m",1.75,"EMA"],
+ ["9·15m",2.25,"EMA"],["5·30m",2.5,"EMA"],["21·10m",3.5,"EMA"],["9·30m",4.5,"EMA"],
+ ["5·1H",5,"EMA"],["21·15m",5.25,"EMA"],["9·1H",9,"EMA"],["5·2H",10,"EMA"],
+ ["21·30m",10.5,"EMA"],["5·3H",15,"EMA"],["9·2H",18,"EMA"],["5·4H",20,"EMA"],
+ ["21·1H",21,"EMA"],["9·3H",27,"EMA"],["9·4H",36,"EMA"],["21·2H",42,"EMA"],
+ ["21·3H",63,"EMA"],["21·4H",84,"EMA"],["5·1D",115,"EMA"],["9·1D",207,"EMA"],
+ ["5·3D",345,"EMA"],["21·1D",483,"EMA"],["5·1W",575,"EMA"],["9·3D",621,"EMA"],
+ ["9·1W",1035,"EMA"],["50·1D",1150,"SMA"],["21·3D",1449,"EMA"],["100·1D",2300,"SMA"],
+ ["21·1W",2415,"EMA"],["150·1D",3450,"SMA"],["200·1D",4600,"SMA"],["200·1W",23000,"SMA"]
+];
+const KEY = new Set(["5·1D","9·1D","21·1D"]);
+const NAMED = [["1m",0.0167],["3m",0.05],["5m",0.0833],["10m",0.167],["15m",0.25],["30m",0.5],["1H",1],["2H",2],["3H",3],["4H",4],["1D",23],["3D",69],["1W",115],["1M",500]];
+const RAINBOW = [[175,82,222],[94,92,230],[0,122,255],[52,199,89],[255,214,10],[255,149,0],[233,30,45]];
+const N = 360;
+const SWEET = Math.log10(35);   // sweet-spot center: ~35 bars on screen
+let price = genPrice();
+function genPrice(){ let p=100,a=[]; for(let i=0;i<N;i++){ p+=(Math.random()-0.5)*1.2+Math.sin(i/40)*0.15; a.push(p);} return a; }
+function ema(src,len){ const k=2/(len+1); let out=[],e=src[0]; for(let i=0;i<src.length;i++){ e=i?src[i]*k+e*(1-k):src[i]; out.push(e);} return out; }
+function sma(src,len){ let out=[],s=0; for(let i=0;i<src.length;i++){ s+=src[i]; if(i>=len)s-=src[i-len]; out.push(s/Math.min(i+1,len)); } return out; }
+function lerp(a,b,t){ return a+(b-a)*t; }
+function rainbowAt(t){ t=Math.max(0,Math.min(1,t)); const x=t*(RAINBOW.length-1),i=Math.floor(x),f=x-i,a=RAINBOW[i],b=RAINBOW[Math.min(i+1,RAINBOW.length-1)]; return [Math.round(lerp(a[0],b[0],f)),Math.round(lerp(a[1],b[1],f)),Math.round(lerp(a[2],b[2],f))]; }
+function bucketAt(t){ const i=Math.max(0,Math.min(RAINBOW.length-1,Math.floor(t*RAINBOW.length))); return RAINBOW[i]; }
+const $=id=>document.getElementById(id);
+function nearestTF(h){ let best=NAMED[0],bd=1e9; NAMED.forEach(([n,v])=>{const d=Math.abs(Math.log10(v)-Math.log10(h)); if(d<bd){bd=d;best=[n,v];}}); return best; }
+function controls(){
+  const z=+$("zoom").value, barH=Math.pow(10,z);
+  return { barH, z,
+    lens:document.querySelector('input[name=lens]:checked').value,
+    discrete:$("discrete").checked, fade:$("fade").checked, keybold:$("keybold").checked,
+    w:+$("width").value };
+}
+function draw(){
+  const c=controls();
+  const nf=nearestTF(c.barH);
+  $("zoomV").textContent=nf[0]+"  ·  bar "+(c.barH>=1?c.barH.toFixed(1)+"h":(c.barH*60).toFixed(0)+"m");
+  $("widthV").textContent=" ±"+c.w.toFixed(2)+" dex";
+  const rows=RUNGS.map(([name,hours,type])=>{ const span=hours/c.barH; const len=Math.max(1,Math.min(N-1,Math.round(span))); const ser=type==="SMA"?sma(price,len):ema(price,len); return {name,hours,type,span,len,ser}; });
+  const last=price[N-1];
+  const seps=rows.map((r,i)=>{ const a=r.ser[N-1]; const b=i>0?rows[i-1].ser[N-1]:a; return Math.abs(a-b)/last; });
+  const maxSep=Math.max(...seps,1e-9);
+  function metricT(r,i){
+    if(c.lens==="span"){ const L=Math.log10(Math.max(r.span,1e-3)); return 0.5+(L-SWEET)/(2*c.w); }
+    if(c.lens==="dist"){ const d=Math.abs(r.ser[N-1]-last)/last; return 1-Math.min(1,d/0.15); }
+    if(c.lens==="sep"){ return seps[i]/maxSep; }
+    if(c.lens==="slope"){ const k=Math.max(1,Math.round(r.span)); const j=Math.max(0,N-1-k); const sl=Math.abs(r.ser[N-1]-r.ser[j])/last; return Math.min(1,sl/0.05); }
+    return .5;
+  }
+  const cv=$("cv"),dpr=devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight; cv.width=W*dpr; cv.height=H*dpr;
+  const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0); g.clearRect(0,0,W,H);
+  let mn=Infinity,mx=-Infinity; const start=Math.floor(N*0.55);
+  for(let i=start;i<N;i++){ mn=Math.min(mn,price[i]); mx=Math.max(mx,price[i]); }
+  rows.forEach(r=>{ for(let i=start;i<N;i++){ mn=Math.min(mn,r.ser[i]); mx=Math.max(mx,r.ser[i]); } });
+  const padR=70,padL=10,padT=14,padB=14;
+  const X=i=>padL+(i-start)/(N-1-start)*(W-padL-padR);
+  const Y=v=>padT+(1-(v-mn)/(mx-mn))*(H-padT-padB);
+  g.strokeStyle="rgba(230,237,243,.55)"; g.lineWidth=1.4; g.beginPath();
+  for(let i=start;i<N;i++){ const x=X(i),y=Y(price[i]); i===start?g.moveTo(x,y):g.lineTo(x,y);} g.stroke();
+  rows.forEach((r,i)=>{
+    const t=metricT(r,i);
+    const col=c.discrete?bucketAt(t):rainbowAt(t);
+    let alpha=1;
+    if(c.fade){ if(t<0)alpha=0.18; else if(t>1)alpha=0.18; else alpha=0.55+0.45*Math.min(1,Math.max(0,1-Math.abs(t-0.5)*1.2)); }
+    const isKey=c.keybold&&KEY.has(r.name); if(isKey)alpha=1;
+    const lw=isKey?3:(r.span>=800?2.2:r.span<3?1:1.5);
+    g.strokeStyle=`rgba(${col[0]},${col[1]},${col[2]},${alpha})`; g.lineWidth=lw; g.beginPath();
+    for(let k=start;k<N;k++){ const x=X(k),y=Y(r.ser[k]); k===start?g.moveTo(x,y):g.lineTo(x,y);} g.stroke();
+    if(isKey||i%6===0||i===rows.length-1){ g.fillStyle=`rgba(${col[0]},${col[1]},${col[2]},${Math.max(alpha,.6)})`; g.font=(isKey?"bold ":"")+"10px -apple-system,sans-serif"; g.fillText(r.name+" "+r.type,X(N-1)+4,Y(r.ser[N-1])+3); }
+  });
+  const lensName={span:"Span / zoom relevance",dist:"Distance from price",sep:"Separation / fan-out",slope:"Slope / activity"}[c.lens];
+  $("legend").innerHTML=`<b>${lensName}</b><br>${c.discrete?"discrete buckets":"continuous"}<br><br>`+["violet","indigo","blue","green","yellow","orange","red"].map((n,i)=>`<span class="sw" style="background:rgb(${RAINBOW[i].join(',')})"></span>${i===0?'cool / faster than view':i===3?'sweet spot — in play':i===6?'warm / slower than view':'&nbsp;'}`).join("<br>");
+  $("stat").textContent=`${RUNGS.length} rungs · zoom bar = ${c.barH.toFixed(3)}h · sweet spot ≈ 35 bars · width ±${c.w} dex`;
+}
+["zoom","width","discrete","fade","keybold"].forEach(id=>$(id).addEventListener("input",draw));
+document.querySelectorAll('input[name=lens]').forEach(r=>r.addEventListener("change",draw));
+$("regen").addEventListener("click",()=>{price=genPrice();draw();});
+addEventListener("resize",draw);
+draw();
+</script>
+</body>
+</html>

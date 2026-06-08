@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SCINTILLA · Chat Telemetry (operator)</title>
+<style>
+  body{background:#0A0A0F;color:#E8E8F0;font-family:'SF Mono',Menlo,monospace;margin:0;padding:20px;font-size:12px}
+  h1{color:#00D4FF;text-transform:uppercase;letter-spacing:2px;font-size:15px;border-bottom:1px solid #00D4FF44;padding-bottom:8px}
+  .row{border:1px solid #1E1E2C;border-radius:6px;padding:10px 14px;margin:10px 0;background:#11111A}
+  .hdr{display:flex;gap:12px;color:#888899;font-size:10px;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px;flex-wrap:wrap}
+  .tag{padding:1px 7px;border-radius:3px;font-weight:bold}
+  .op{background:#00D4FF22;color:#00D4FF}.beta{background:#FF950022;color:#FF9500}
+  .q{color:#E8E8F0;margin:4px 0}.q b{color:#00D4FF}
+  .a{color:#A0A0C0;white-space:pre-wrap;max-height:130px;overflow:hidden}
+  .err{color:#FF6B7A;padding:30px;text-align:center}
+  button{background:#11111A;border:1px solid #222236;border-radius:6px;color:#00D4FF;font:inherit;padding:7px 14px;cursor:pointer;text-transform:uppercase;letter-spacing:1px}
+</style>
+</head>
+<body>
+<h1>Chat Telemetry <span style="color:#888899;font-size:11px">· operator only · latest 100 turns</span></h1>
+<button onclick="load()">↻ refresh</button>
+<div id="out"><div class="err">loading…</div></div>
+<script>
+const FN="https://wadinxqplrggagkvrdag.supabase.co/functions/v1/chat";
+const K=new URLSearchParams(location.search).get('k');
+async function load(){
+  const out=document.getElementById('out');
+  if(!K){out.innerHTML='<div class="err">operator key required: open as logs.html?k=YOUR-OPERATOR-KEY</div>';return;}
+  out.innerHTML='<div class="err">loading…</div>';
+  try{
+    const r=await fetch(FN,{method:'POST',headers:{'content-type':'application/json','x-scintilla':K},body:JSON.stringify({action:'logs'})});
+    const j=await r.json();
+    if(!j.logs){out.innerHTML='<div class="err">'+(j.error||'no access')+'</div>';return;}
+    out.innerHTML=j.logs.map(l=>{
+      const when=new Date(l.ts*1000).toLocaleString();
+      return `<div class="row"><div class="hdr"><span class="tag ${l.role_tag==='operator'?'op':'beta'}">${l.role_tag}</span>`+
+        `<span>${l.scope?l.scope+' DESK':'MASTER'}</span><span>${when}</span><span>${l.duration_ms}ms</span><span>conv ${l.conversation_id||'—'}</span></div>`+
+        `<div class="q"><b>Q:</b> ${l.user_msg||''}</div><div class="a">${(l.reply||'').slice(0,600)}</div></div>`;
+    }).join('')||'<div class="err">no conversations logged yet</div>';
+  }catch(e){out.innerHTML='<div class="err">'+e.message+'</div>';}
+}
+load();
+</script>
+</body>
+</html>

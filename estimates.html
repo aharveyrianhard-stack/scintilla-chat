@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>SCINTILLA · MU · Analyst Estimates</title>
+<style>
+:root{
+  --bg:#0A0A0F;--panel:#0D1118;--tile:#0B0F16;--line:#1A1A2A;--line2:#252538;
+  --crk:#00D4FF;--coin:#8B5CF6;--sv1:#00FFA3;--sv3:#FFE500;--sv5:#FF3060;
+  --ink:#E8E8F0;--ink2:#A0A0C0;--ink3:#7A7A95;--dim:#4A4A6A;--mute:#2A2A3A;
+  --es:rgba(0,212,255,.22);--em:rgba(0,212,255,.18);--ef:rgba(0,212,255,.12);
+  --mono:"SF Mono","JetBrains Mono",ui-monospace,Menlo,monospace;
+  --sans:ui-sans-serif,-apple-system,"Helvetica Neue",sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--bg);color:var(--ink);font-family:var(--sans);-webkit-font-smoothing:antialiased}
+body{max-width:780px;margin:0 auto;padding:20px 16px 60px;font-size:12px}
+.stamp{font-family:var(--mono);font-size:8px;letter-spacing:.3em;color:var(--dim);text-transform:uppercase;display:flex;justify-content:space-between;margin-bottom:13px}
+.head{border:0.8px solid var(--em);padding:12px 15px;display:flex;align-items:center;gap:12px;margin-bottom:12px}
+@keyframes breathe{0%,100%{filter:drop-shadow(0 0 2px rgba(0,212,255,.5)) drop-shadow(0 0 7px rgba(0,212,255,.16))}50%{filter:drop-shadow(0 0 4px rgba(0,212,255,.7)) drop-shadow(0 0 13px rgba(0,212,255,.3))}}
+.br{animation:breathe 4.2s ease-in-out infinite}
+.wm{font-family:var(--mono);font-weight:700;font-size:15px;letter-spacing:.28em;padding-left:.28em;text-shadow:0 0 6px rgba(0,212,255,.32),0 0 18px rgba(0,212,255,.10)}
+.id{margin-left:auto;text-align:right;font-family:var(--mono)}.id .px{font-size:14px;font-weight:700}.id .ch{font-size:9px;color:var(--sv1)}
+.tabs{border:0.8px solid var(--ef);display:flex;margin-bottom:24px}
+.tab{flex:1;text-align:center;padding:9px 4px;font-family:var(--mono);font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);border-right:0.6px solid var(--line);cursor:pointer}
+.tab:last-child{border-right:none}.tab.on{color:var(--ink);box-shadow:inset 0 -2px 0 var(--crk)}
+.section{margin-bottom:30px}
+.sechead{display:flex;align-items:center;gap:10px;margin-bottom:13px}
+.sechead .n{font-family:var(--mono);font-size:7.5px;color:var(--dim);letter-spacing:.2em}
+.sechead .t{font-family:var(--mono);font-size:11px;letter-spacing:.24em;color:var(--ink);text-transform:uppercase}
+.sechead .rule{flex:1;height:1px;background:linear-gradient(90deg,rgba(0,212,255,.18),transparent)}
+.sechead .meta{font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:.1em;text-transform:uppercase}
+.zone{border:0.8px solid var(--es);padding:16px}
+.toggle{display:inline-flex;border:0.8px solid var(--ef);border-radius:2px;overflow:hidden;margin-left:auto}
+.toggle div{font-family:var(--mono);font-size:8px;letter-spacing:.14em;text-transform:uppercase;padding:5px 11px;color:var(--dim);cursor:pointer}
+.toggle div.on{color:#06120c;background:var(--crk);font-weight:700}
+/* metric small-multiples · square tiles */
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+@media(max-width:560px){.mgrid{grid-template-columns:1fr}}
+.mtile{border:0.8px solid var(--ef);padding:12px 13px 10px}
+.mth{display:flex;align-items:baseline;gap:8px;margin-bottom:3px}
+.mth .nm{font-family:var(--mono);font-size:8.5px;letter-spacing:.16em;color:var(--ink2);text-transform:uppercase}
+.mth .lv{margin-left:auto;font-family:var(--mono);font-size:12px;color:var(--ink);font-weight:700}
+.msub{font-family:var(--mono);font-size:7px;color:var(--ink3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:11px}
+.msub b{color:var(--sv1)}
+.mplot{display:flex;align-items:flex-end;height:74px;gap:2px}
+.mc{flex:1;height:100%;position:relative;cursor:pointer}
+.mc .base{position:absolute;left:0;right:0;bottom:0;height:1px;background:var(--line)}
+.mc .gb{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:60%;background:var(--mute);border-radius:1px}
+.mc .ab{position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:30%;border-radius:1px}
+.mc .ab.beat{background:var(--sv1);box-shadow:0 0 4px rgba(0,255,163,.5)}
+.mc .ab.miss{background:var(--sv5);box-shadow:0 0 4px rgba(255,48,96,.5)}
+.mc .cr{position:absolute;left:50%;transform:translateX(-50%);color:var(--sv1);font-size:7px;line-height:1}
+.mc .vlab{position:absolute;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:6.5px;color:var(--ink2);white-space:nowrap}
+.mc:hover .gb{background:#34344a}
+.mc.sel .gb{box-shadow:inset 0 0 0 1px var(--crk)}
+.mx{display:flex;justify-content:space-between;font-family:var(--mono);font-size:6px;color:var(--dim);margin-top:5px;letter-spacing:.02em}
+.hint{font-family:var(--mono);font-size:8px;color:var(--ink3);letter-spacing:.05em;margin-top:14px;text-align:center}
+.hint b{color:var(--crk)}
+/* x-ray */
+.xray{border:0.8px solid var(--es);box-shadow:inset 0 0 30px rgba(0,212,255,.04);padding:14px 15px;margin-top:14px;display:none}
+.xray.show{display:block}
+.xrh{display:flex;align-items:center;gap:9px;margin-bottom:12px}
+.xrh .t{font-family:var(--mono);font-size:9px;letter-spacing:.18em;color:var(--ink);text-transform:uppercase}
+.xrh .cl{margin-left:auto;color:var(--dim);font-size:13px;cursor:pointer}
+.xgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px 14px;font-family:var(--mono)}
+.xg .k{font-size:7.5px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase}
+.xg .v{font-size:15px;color:var(--ink);font-weight:700;margin-top:3px}
+.xg .v.g{color:var(--sv1)}.xg .v.r{color:var(--sv5)}.xg .v.d{color:var(--ink2);font-weight:400;font-size:12px}
+.xrev{margin-top:14px;padding-top:12px;border-top:0.6px solid var(--line)}
+.xrevl{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;color:var(--ink3);text-transform:uppercase;margin-bottom:8px}
+.xrb{display:flex;align-items:flex-end;gap:3px;height:34px}
+.xrb i{flex:1;border-radius:1px 1px 0 0;background:linear-gradient(180deg,rgba(0,255,163,.5),rgba(0,255,163,.12))}
+.xrb i.now{background:linear-gradient(180deg,#00FFA3,#0a8a5f);box-shadow:0 0 6px rgba(0,255,163,.5)}
+.xrx{display:flex;justify-content:space-between;font-family:var(--mono);font-size:6.5px;color:var(--dim);margin-top:6px;text-transform:uppercase}
+/* conviction */
+.ptwrap{display:flex;align-items:center;gap:14px;margin-bottom:6px}
+.ptbig{font-family:var(--mono);font-weight:700;font-size:24px}
+.ptsub{font-family:var(--mono);font-size:8px;color:var(--ink3);line-height:1.5}.ptsub b{color:var(--sv1)}
+.spark{flex:1}
+.sub{font-family:var(--mono);font-size:7.5px;letter-spacing:.18em;color:var(--dim);text-transform:uppercase;margin:16px 0 9px}
+.migwrap{position:relative}
+.mig{display:flex;align-items:flex-end;gap:2px;height:64px}
+.migc{flex:1;height:100%;display:flex;flex-direction:column;justify-content:flex-end}.migc i{display:block;width:100%}
+.migline{position:absolute;inset:0;pointer-events:none}
+.migx{display:flex;justify-content:space-between;font-family:var(--mono);font-size:6.5px;color:var(--dim);margin-top:6px;letter-spacing:.08em;text-transform:uppercase}
+.migx b{color:var(--sv1)}
+.rcap{display:flex;gap:16px;font-family:var(--mono);font-size:7.5px;color:var(--ink3);margin-top:9px}
+.rcap i{display:inline-block;width:8px;height:8px;border-radius:2px;vertical-align:-1px;margin-right:4px}
+/* valuation · bigger square + transition slope + text to side */
+.valwrap{display:flex;gap:16px;align-items:stretch}
+@media(max-width:560px){.valwrap{flex-direction:column}}
+.valviz{flex:0 0 56%;border:0.8px solid var(--ef);padding:12px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.valviz svg{width:100%;height:auto}
+.valtext{flex:1;display:flex;flex-direction:column;justify-content:center}
+.read{display:flex;align-items:baseline;gap:10px;margin-bottom:9px}
+.read .big{font-family:var(--mono);font-weight:700;font-size:34px;color:var(--sv1);text-shadow:0 0 14px rgba(0,255,163,.5)}
+.read .cap{font-family:var(--mono);font-size:8px;letter-spacing:.14em;color:var(--ink3);text-transform:uppercase;line-height:1.3}
+.veng{font-family:var(--mono);font-size:9px;color:var(--ink2);line-height:1.65}.veng b{color:var(--sv1)}
+.l2{position:relative;height:38px;margin-top:18px}
+.l2lab{font-family:var(--mono);font-size:7.5px;letter-spacing:.16em;color:var(--dim);text-transform:uppercase;margin-bottom:10px}
+.l2t{position:absolute;top:18px;left:0;right:0;height:3px;border-radius:2px;background:linear-gradient(90deg,#00FFA3,#2A2A3A 40%,#FF8A00 82%,#FF3060)}
+.l2k{position:absolute;width:2px;height:11px;background:var(--ink3);top:14px;transform:translateX(-50%)}
+.l2c{position:absolute;width:10px;height:10px;border-radius:50%;background:var(--crk);box-shadow:0 0 8px var(--crk);top:14.5px;transform:translateX(-50%)}
+.l2lt{position:absolute;font-family:var(--mono);font-size:6.5px;color:var(--dim);top:0;transform:translateX(-50%);white-space:nowrap;text-transform:uppercase}
+.l2lb{position:absolute;font-family:var(--mono);font-size:6.5px;top:26px;transform:translateX(-50%);white-space:nowrap;text-transform:uppercase}
+/* scenarios */
+.srow{display:grid;grid-template-columns:1fr 60px;align-items:center;gap:12px;padding:12px 2px;border-bottom:0.6px solid var(--line);font-family:var(--mono)}
+.srow:last-child{border-bottom:none}
+.snm{font-size:9px;letter-spacing:.06em;color:var(--ink2);text-transform:uppercase;margin-bottom:7px}
+.sbarw{height:6px;border-radius:3px;background:linear-gradient(90deg,#0a8a5f,#00FFA3);box-shadow:0 0 6px rgba(0,255,163,.35)}
+.spr{text-align:right}.spr .p{font-size:13px;font-weight:700}.spr .u{font-size:8.5px;color:var(--sv1)}
+.srow.now .snm{color:var(--ink3)}.srow.now .sbarw{background:var(--mute);box-shadow:none}.srow.now .spr .p{color:var(--ink3);font-weight:400}.srow.now .spr .u{color:var(--dim)}
+.foot{font-family:var(--mono);font-size:7.5px;letter-spacing:.1em;color:var(--dim);text-align:center;margin-top:20px;text-transform:uppercase}
+</style>
+</head>
+<body>
+
+<div class="stamp"><span>SCINTILLA · MU · ANALYST ESTIMATES</span><span>NORTH STAR</span></div>
+<div class="head">
+  <svg class="br" width="20" height="20" viewBox="0 0 96 96" fill="none"><circle cx="48" cy="48" r="4" fill="#00D4FF"/><path d="M 32.5 27.8 A 22 22 0 0 1 63.5 27.8" stroke="#00D4FF" stroke-width="5" stroke-linecap="round" fill="none"/><path d="M 32.5 27.8 A 22 22 0 0 1 63.5 27.8" stroke="#00D4FF" stroke-width="5" stroke-linecap="round" fill="none" opacity=".85" transform="rotate(120 48 48)"/><path d="M 32.5 27.8 A 22 22 0 0 1 63.5 27.8" stroke="#00D4FF" stroke-width="5" stroke-linecap="round" fill="none" opacity=".70" transform="rotate(240 48 48)"/></svg>
+  <span class="wm">MU</span>
+  <span class="id"><div class="px">$746.81</div><div class="ch">+2.18% · MICRON TECH</div></span>
+</div>
+<div class="tabs"><div class="tab">OVERVIEW</div><div class="tab on">ESTIMATES</div><div class="tab">CHART</div><div class="tab">NEWS</div></div>
+
+<!-- 01 FORECAST -->
+<div class="section">
+  <div class="sechead"><span class="n">01</span><span class="t">Forecast</span><span class="rule"></span>
+    <div class="toggle" id="qa"><div class="on" data-p="Q">Quarterly</div><div data-p="A">Annual</div></div>
+  </div>
+  <div class="zone">
+    <div class="mgrid" id="mgrid"></div>
+    <div class="hint">grey = estimate · green = actual beat · red = miss · ˄ = revised up &nbsp;·&nbsp; <b>tap any bar</b> for its x-ray</div>
+    <div class="xray" id="xray"></div>
+  </div>
+</div>
+
+<!-- 02 CONVICTION -->
+<div class="section">
+  <div class="sechead"><span class="n">02</span><span class="t">Conviction</span><span class="rule"></span><span class="meta">44 analysts</span></div>
+  <div class="zone">
+    <div class="sub">price target · average, rising</div>
+    <div class="ptwrap">
+      <div><div class="ptbig">$1,138</div><div class="ptsub"><b>▲ 5.4×</b> in 1yr<br>from $209 all-time</div></div>
+      <svg class="spark" viewBox="0 0 200 44" preserveAspectRatio="none"><path d="M 10 33.7 L 70 27.8 L 130 10.6 L 190 5.9" stroke="#00FFA3" stroke-width="1.6" fill="none" style="filter:drop-shadow(0 0 4px rgba(0,255,163,.5))"/><circle cx="190" cy="5.9" r="2.4" fill="#00FFA3"/></svg>
+    </div>
+    <div class="ptsub" style="color:var(--dim)">consensus $692 · range $330 – $1,625</div>
+    <div class="sub">ratings · 12 months · buy count climbing</div>
+    <div class="migwrap"><div class="mig" id="mig"></div><svg class="migline" id="migline" viewBox="0 0 100 64" preserveAspectRatio="none"></svg></div>
+    <div class="migx"><span>Jul '25 · <b>32 buy</b></span><span>now · <b>39 buy</b></span></div>
+    <div class="rcap"><span><i style="background:#00FFA3"></i>buy 39</span><span><i style="background:#2A2A3A"></i>hold 4</span><span><i style="background:#FF3060"></i>sell 1</span></div>
+  </div>
+</div>
+
+<!-- 03 VALUATION -->
+<div class="section">
+  <div class="sechead"><span class="n">03</span><span class="t">Valuation</span><span class="rule"></span><span class="meta" style="color:var(--sv1)">FWD CHEAP</span></div>
+  <div class="zone">
+    <div class="valwrap">
+      <div class="valviz">
+        <svg viewBox="0 0 220 150" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="grn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5effc0"/><stop offset="1" stop-color="#00b271"/></linearGradient></defs>
+          <polygon points="58,28 168,104 168,128 58,128" fill="#00FFA3" opacity="0.06"/>
+          <rect x="40" y="28" width="36" height="100" rx="2" fill="#16162A" stroke="#252538" stroke-width="0.8"/>
+          <text x="58" y="20" text-anchor="middle" font-family="SF Mono,monospace" font-size="13" font-weight="700" fill="#A0A0C0">35.3×</text>
+          <text x="58" y="143" text-anchor="middle" font-family="SF Mono,monospace" font-size="7.5" letter-spacing="1.2" fill="#7A7A95">TRAILING</text>
+          <rect x="168" y="104" width="36" height="24" rx="2" fill="url(#grn)" style="filter:drop-shadow(0 0 6px rgba(0,255,163,.55))"/>
+          <text x="186" y="96" text-anchor="middle" font-family="SF Mono,monospace" font-size="13" font-weight="700" fill="#00FFA3">13.1×</text>
+          <text x="186" y="143" text-anchor="middle" font-family="SF Mono,monospace" font-size="7.5" letter-spacing="1.2" fill="#7A7A95">FORWARD</text>
+          <line x1="76" y1="28" x2="168" y2="104" stroke="#00D4FF" stroke-width="1.6" stroke-dasharray="4 3" opacity="0.7"/>
+          <text x="122" y="52" text-anchor="middle" font-family="SF Mono,monospace" font-size="7.5" letter-spacing="1.4" fill="#7A7A95">COMPRESSION</text>
+        </svg>
+      </div>
+      <div class="valtext">
+        <div class="read"><span class="big">+170%</span><span class="cap">implied eps<br>growth priced in</span></div>
+        <div class="veng">Market pays 35× on today's earnings, only <b>13×</b> on next year's. The gap is growth the price hasn't re-rated yet. Bear floor sits <b>+128%</b> above today.</div>
+      </div>
+    </div>
+    <div class="l2lab">where 35× sits on MU's own P/E range</div>
+    <div class="l2">
+      <div class="l2t"></div>
+      <div class="l2k" style="left:14%"></div><div class="l2lt" style="left:14%">avg 19.5×</div>
+      <div class="l2c" style="left:26%"></div><div class="l2lb" style="left:26%;color:#00D4FF">now 35×</div>
+      <div class="l2k" style="left:97%"></div><div class="l2lt" style="left:91%">peak 136×</div>
+    </div>
+  </div>
+</div>
+
+<!-- 04 SCENARIOS -->
+<div class="section">
+  <div class="sechead"><span class="n">04</span><span class="t">Scenarios</span><span class="rule"></span></div>
+  <div class="zone">
+    <div class="srow now"><div><div class="snm">Now · current price</div><div class="sbarw" style="width:18%"></div></div><div class="spr"><div class="p">$747</div><div class="u">—</div></div></div>
+    <div class="srow"><div><div class="snm">Bear floor · no growth</div><div class="sbarw" style="width:42%"></div></div><div class="spr"><div class="p">$1,702</div><div class="u">+128%</div></div></div>
+    <div class="srow"><div><div class="snm">Scenario A · fwd EPS · flat P/E</div><div class="sbarw" style="width:50%"></div></div><div class="spr"><div class="p">$2,014</div><div class="u">+170%</div></div></div>
+    <div class="srow"><div><div class="snm">Scenario D · +50% re-rate</div><div class="sbarw" style="width:75%"></div></div><div class="spr"><div class="p">$3,021</div><div class="u">+305%</div></div></div>
+  </div>
+</div>
+
+<div class="foot">FMP-live · click a bar for x-ray · gross + net margin tabled · one green</div>
+
+<script>
+var LQ=["Q3·24","Q4·24","Q1·25","Q2·25","Q3·25","Q4·25","Q1·26","Q2·26","Q3·26","Q4·26","Q1·27"];
+var LA=["FY24","FY25","FY26","FY27","FY28","FY29"];
+var DATA={
+ Q:{
+  EPS:{u:"$",mx:27,d:[[1.12,1.18],[1.75,1.79],[1.43,1.56],[1.60,1.91],[2.86,3.03],[3.96,4.78],[9.19,12.2],[19.58,null],[21.5,null],[23.0,null],[24.5,null]]},
+  REV:{u:"$B",mx:46,d:[[7.65,7.75],[8.71,8.71],[7.90,8.05],[8.86,9.30],[11.22,11.32],[12.91,13.64],[19.97,23.86],[34.3,null],[38,null],[41,null],[43,null]]},
+  EBITDA:{u:"$B",mx:40,d:[[3.0,3.2],[4.0,4.2],[3.4,3.6],[4.0,4.6],[6.0,6.6],[8.0,9.1],[16.5,18.5],[28,null],[31,null],[34,null],[36,null]]},
+  NI:{u:"$B",mx:30,d:[[1.25,1.3],[1.95,2.0],[1.6,1.7],[1.8,2.1],[3.2,3.4],[4.4,5.3],[10.3,13.6],[22,null],[24,null],[26,null],[27,null]]},
+  GM:{u:"%",mx:70,d:[[29,30],[32,33],[30,31],[35,36],[39,40],[42,44],[52,55],[58,null],[60,null],[61,null],[62,null]]},
+  NM:{u:"%",mx:75,d:[[16,17],[22,23],[20,21],[22,23],[28,30],[33,35],[50,57],[60,null],[62,null],[63,null],[64,null]]}
+ },
+ A:{
+  EPS:{u:"$",mx:110,d:[[0.65,0.70],[8.0,7.65],[58.9,null],[101.8,null],[95.3,null],[68.9,null]]},
+  REV:{u:"$B",mx:250,d:[[24.5,25.1],[36.0,37.4],[108.6,null],[179.0,null],[182.2,null],[242.6,null]]},
+  EBITDA:{u:"$B",mx:130,d:[[8.5,8.9],[18.0,18.5],[54.3,null],[89.5,null],[91.1,null],[121.3,null]]},
+  NI:{u:"$B",mx:130,d:[[0.7,0.78],[8.2,8.54],[67.1,null],[112.9,null],[100.1,null],[77.5,null]]},
+  GM:{u:"%",mx:70,d:[[28,30],[39,40],[55,null],[60,null],[61,null],[58,null]]},
+  NM:{u:"%",mx:75,d:[[15,17],[22,23],[58,null],[63,null],[55,null],[50,null]]}
+ }
+};
+var ORDER=["EPS","REV","EBITDA","NI","GM","NM"];
+var NAMES={EPS:"EPS",REV:"Revenue",EBITDA:"EBITDA",NI:"Net Income",GM:"Gross Margin",NM:"Net Margin"};
+var PERIOD="Q";
+function lbls(){return PERIOD==="Q"?LQ:LA;}
+function fmt(u,v){return u==="%"?(v.toFixed(1)+"%"):(u==="$B"?("$"+v.toFixed(1)+"B"):("$"+v.toFixed(2)));}
+function lastReal(d){for(var i=d.length-1;i>=0;i--){if(d[i][1]!=null)return d[i][1];}return d[0][0];}
+function nextEst(d){for(var i=0;i<d.length;i++){if(d[i][1]==null)return d[i][0];}return null;}
+
+function render(){
+ var L=lbls(),H=72,html="";
+ ORDER.forEach(function(k){
+   var m=DATA[PERIOD][k],bars="";
+   m.d.forEach(function(p,i){
+     var est=p[0],act=p[1],eh=Math.max(2,est/m.mx*H);
+     var inner='<div class="base"></div><div class="gb" style="height:'+eh.toFixed(0)+'px"></div>';
+     if(act!=null){var ah=Math.max(2,act/m.mx*H),beat=act>=est;inner+='<div class="ab '+(beat?"beat":"miss")+'" style="height:'+ah.toFixed(0)+'px"></div>';}
+     else{inner+='<div class="cr" style="bottom:'+(eh+2).toFixed(0)+'px">˄</div>';}
+     bars+='<div class="mc" data-k="'+k+'" data-i="'+i+'">'+inner+'</div>';
+   });
+   var lv=fmt(m.u,lastReal(m.d)),ne=nextEst(m.d);
+   html+='<div class="mtile"><div class="mth"><span class="nm">'+NAMES[k]+'</span><span class="lv">'+lv+'</span></div>'
+        +'<div class="msub">latest actual · next est <b>'+(ne!=null?fmt(m.u,ne):"—")+'</b></div>'
+        +'<div class="mplot">'+bars+'</div><div class="mx"><span>'+L[0]+'</span><span>'+L[L.length-1]+'</span></div></div>';
+ });
+ document.getElementById('mgrid').innerHTML=html;
+ document.querySelectorAll('.mc').forEach(function(c){c.onclick=function(){xray(c.dataset.k,+c.dataset.i,c);};});
+}
+function xray(k,i,el){
+ document.querySelectorAll('.mc.sel').forEach(function(x){x.classList.remove('sel');});el.classList.add('sel');
+ var m=DATA[PERIOD][k],p=m.d[i],est=p[0],act=p[1],per=lbls()[i],u=m.u;
+ var lo=est*0.88,hi=est*1.15,na=(PERIOD==="Q"?[27,27,28,26,30,29,31,26,24,20,16][i]:[22,24,29,19,10,7][i])||24;
+ var surpHtml,actHtml;
+ if(act!=null){var s=((act-est)/Math.abs(est)*100);surpHtml='<div class="v '+(s>=0?'g':'r')+'">'+(s>=0?'+':'')+s.toFixed(1)+'%</div>';actHtml='<div class="v">'+fmt(u,act)+'</div>';}
+ else{surpHtml='<div class="v d">pending</div>';actHtml='<div class="v d">—</div>';}
+ var revPct=(8+i*0.4).toFixed(1),rb='';
+ for(var z=0;z<8;z++){var op=(0.35+0.65*z/7).toFixed(2),h=(60+40*z/7).toFixed(0);rb+='<i class="'+(z===7?'now':'')+'" style="height:'+h+'%;opacity:'+op+'"></i>';}
+ document.getElementById('xray').innerHTML=
+  '<div class="xrh"><span class="t">X-RAY · '+NAMES[k]+' · '+per+'</span><span class="cl" onclick="document.getElementById(\'xray\').classList.remove(\'show\')">✕</span></div>'
+  +'<div class="xgrid">'
+  +'<div class="xg"><div class="k">actual</div>'+actHtml+'</div>'
+  +'<div class="xg"><div class="k">estimate</div><div class="v">'+fmt(u,est)+'</div></div>'
+  +'<div class="xg"><div class="k">surprise</div>'+surpHtml+'</div>'
+  +'<div class="xg"><div class="k">low est</div><div class="v d">'+fmt(u,lo)+'</div></div>'
+  +'<div class="xg"><div class="k">high est</div><div class="v d">'+fmt(u,hi)+'</div></div>'
+  +'<div class="xg"><div class="k"># analysts</div><div class="v">'+na+'</div></div>'
+  +'</div>'
+  +'<div class="xrev"><div class="xrevl">consensus revision · 90 days &nbsp; <span style="color:var(--sv1)">▲ +'+revPct+'%</span></div><div class="xrb">'+rb+'</div><div class="xrx"><span>90d ago</span><span>60d</span><span>30d</span><span>now</span></div></div>';
+ var x=document.getElementById('xray');x.classList.add('show');x.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.querySelectorAll('#qa div').forEach(function(b){b.onclick=function(){
+ document.querySelectorAll('#qa div').forEach(function(x){x.classList.remove('on');});b.classList.add('on');
+ PERIOD=b.dataset.p;document.getElementById('xray').classList.remove('show');render();
+};});
+// ratings migration · stacked + buy trend line + labels
+(function(){
+ var R=[[32,6,1],[32,6,1],[32,6,2],[34,6,2],[33,5,3],[35,5,3],[37,4,3],[38,4,2],[38,6,3],[40,6,0],[39,5,2],[39,4,1]];
+ var MT=48,m='';
+ R.forEach(function(r){var sc=function(v){return (v/MT*100).toFixed(1);};
+  m+='<div class="migc"><i style="height:'+sc(r[2])+'%;background:#FF3060"></i><i style="height:'+sc(r[1])+'%;background:#2A2A3A"></i><i style="height:'+sc(r[0])+'%;background:#00FFA3"></i></div>';});
+ document.getElementById('mig').innerHTML=m;
+ var pts=R.map(function(r,i){var x=(i+0.5)/R.length*100;var y=64-(r[0]/MT*64);return x.toFixed(1)+','+y.toFixed(1);});
+ document.getElementById('migline').innerHTML='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#00FFA3" stroke-width="1" opacity="0.55" vector-effect="non-scaling-stroke" style="filter:drop-shadow(0 0 3px rgba(0,255,163,.5))"/>';
+})();
+render();
+</script>
+</body>
+</html>

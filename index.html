@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A0A0F">
+<link rel="manifest" href="manifest.json">
+<title>SCINTILLA</title>
+<style>
+  :root{--bg:#0A0A0F;--panel:#11111A;--line:#222236;--cyan:#00D4FF;--txt:#E8E8F0;--dim:#888899;--up:#7CFFB2;--dn:#FF6B7A}
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{background:var(--bg);color:var(--txt);font-family:'SF Mono',Menlo,monospace;margin:0;display:flex;flex-direction:column}
+  header{display:flex;align-items:center;gap:14px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--bg);z-index:5}
+  header h1{font-size:15px;letter-spacing:3px;color:var(--cyan);margin:0;cursor:pointer}
+  nav{display:flex;gap:6px;margin-left:auto}
+  nav a{color:var(--dim);text-decoration:none;font-size:11px;text-transform:uppercase;letter-spacing:1px;padding:6px 10px;border:1px solid transparent;border-radius:6px}
+  nav a.on{color:var(--cyan);border-color:#00D4FF44}
+  #view{flex:1;overflow-y:auto;padding:16px;max-width:1100px;width:100%;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;cursor:pointer;transition:border-color .15s}
+  .tile:hover{border-color:var(--cyan)}
+  .tile .tk{color:var(--cyan);font-weight:bold;font-size:14px;letter-spacing:1px}
+  .tile .nm{color:var(--dim);font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:2px 0 8px}
+  .tile .z{font-size:12px}
+  .pos{color:var(--up)}.neg{color:var(--dn)}
+  h2{color:var(--cyan);text-transform:uppercase;letter-spacing:2px;font-size:13px;margin:22px 0 10px;border-bottom:1px solid #00D4FF33;padding-bottom:6px}
+  table{border-collapse:collapse;width:100%;font-size:12px;margin:8px 0}
+  th{color:var(--cyan);text-align:left;border-bottom:1px solid #00D4FF44;padding:5px 8px;text-transform:uppercase;font-size:10px;letter-spacing:1px}
+  td{border-bottom:1px solid #1E1E2C;padding:5px 8px}
+  .hdr{display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;margin-bottom:4px}
+  .hdr .big{font-size:22px;color:var(--cyan);font-weight:bold;letter-spacing:2px}
+  .hdr .px{font-size:20px}
+  .sub{color:var(--dim);font-size:11px;line-height:1.6}
+  canvas{width:100%;height:220px;background:var(--panel);border:1px solid var(--line);border-radius:8px}
+  .newsrow{padding:7px 0;border-bottom:1px solid #1E1E2C;font-size:12px}
+  .newsrow a{color:var(--txt);text-decoration:none}
+  .newsrow a:hover{color:var(--cyan)}
+  .newsrow .src{color:var(--dim);font-size:10px}
+  input#q{background:var(--panel);border:1px solid var(--line);border-radius:6px;color:var(--txt);font:inherit;font-size:13px;padding:9px 12px;outline:none;width:220px}
+  input#q:focus{border-color:var(--cyan)}
+  .load{color:var(--dim);padding:30px;text-align:center}
+  iframe{width:100%;height:calc(100dvh - 60px);border:0}
+  .back{color:var(--dim);cursor:pointer;font-size:11px;text-transform:uppercase;letter-spacing:1px}
+  .back:hover{color:var(--cyan)}
+  @media(max-width:600px){.grid{grid-template-columns:repeat(auto-fill,minmax(130px,1fr))}}
+</style>
+</head>
+<body>
+<header>
+  <h1 onclick="location.hash=''">SCINTILLA</h1>
+  <nav>
+    <a href="#" id="nav-dash">Dashboard</a>
+    <a href="cockpit.html" id="nav-cockpit">Cockpit</a>
+    <a href="sandbox.html" id="nav-sandbox">Sandbox</a>
+    <a href="estimates.html" id="nav-est">Estimates</a>
+    <a href="#chat" id="nav-chat">Chat</a>
+  </nav>
+</header>
+<div id="view"><div class="load">loading…</div></div>
+<script>
+const SB="https://wadinxqplrggagkvrdag.supabase.co/rest/v1";
+const KEY="sb_publishable_AutibLpFtTns-WHAg67Pvw_I0HmjqE9";
+const view=document.getElementById('view');
+async function pg(path){
+  const r=await fetch(SB+path,{headers:{apikey:KEY,Authorization:"Bearer "+KEY}});
+  if(!r.ok) throw new Error("db "+r.status);
+  return r.json();
+}
+const fmtCap=v=>v>=1e12?(v/1e12).toFixed(2)+'T':v>=1e9?(v/1e9).toFixed(1)+'B':v>=1e6?(v/1e6).toFixed(0)+'M':(v||0).toFixed(0);
+const fmtPx=v=>v>=1000?v.toLocaleString(undefined,{maximumFractionDigits:0}):v>=10?v.toFixed(2):v.toFixed(4);
+const cls=v=>v>0?'pos':v<0?'neg':'';
+
+async function dashboard(){
+  document.getElementById('nav-dash').classList.add('on');document.getElementById('nav-chat').classList.remove('on');
+  view.innerHTML='<div class="load">loading universe…</div>';
+  const [profiles,stats]=await Promise.all([
+    pg('/company_profile?select=ticker,name,sector,market_cap,price&order=market_cap.desc.nullslast&limit=140'),
+    pg('/statistics?select=ticker,zscore,percentile&tf=eq.D&name=eq.EMA21&limit=200')
+  ]);
+  const zmap={};stats.forEach(s=>zmap[s.ticker]=s);
+  const sorted=[...stats].sort((a,b)=>Math.abs(b.zscore)-Math.abs(a.zscore)).slice(0,8);
+  let h='<div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><h2 style="margin:10px 0;border:0">Universe</h2>'+
+    '<input id="q" placeholder="search ticker…" oninput="filterTiles(this.value)"></div>';
+  h+='<h2>Most stretched today (EMA21 z, daily)</h2><div class="grid">';
+  for(const s of sorted){
+    h+=tile(s.ticker,(profiles.find(p=>p.ticker===s.ticker)||{}).name||'',s);
+  }
+  h+='</div><h2>All tickers</h2><div class="grid" id="tiles">';
+  for(const p of profiles){
+    h+=tile(p.ticker,p.name||'',zmap[p.ticker]);
+  }
+  h+='</div>';
+  view.innerHTML=h;
+}
+function tile(tk,nm,s){
+  const z=s?s.zscore:null;
+  return `<div class="tile" onclick="location.href='company.html?t=${tk}'"><div class="tk">${tk}</div><div class="nm">${nm||'&nbsp;'}</div>`+
+    `<div class="z ${z!=null?cls(z):''}">${z!=null?('z '+z.toFixed(2)+' · '+Math.round(s.percentile)+'th'):'—'}</div></div>`;
+}
+function filterTiles(q){
+  q=q.trim().toUpperCase();
+  document.querySelectorAll('#tiles .tile').forEach(t=>{
+    t.style.display=t.querySelector('.tk').textContent.includes(q)?'':'none';
+  });
+}
+
+async function company(tk){
+  document.getElementById('nav-dash').classList.remove('on');document.getElementById('nav-chat').classList.remove('on');
+  view.innerHTML='<div class="load">loading '+tk+'…</div>';
+  const [prof,bars,stats,funda,news,est]=await Promise.all([
+    pg(`/company_profile?ticker=eq.${tk}&limit=1`),
+    pg(`/ohlcv_history?select=timestamp,close&ticker=eq.${tk}&tf=eq.D&order=timestamp.desc&limit=250`),
+    pg(`/statistics?select=name,tf,current,zscore,percentile&ticker=eq.${tk}&tf=in.(D,W)&name=in.(EMA21,EMA50,SMA200,RSI14,ATR_PCT,VOL_REL,REALIZED_VOL,BB_PCTB,VWAP_DIST20,VP_POC_DIST100)&order=name`),
+    pg(`/fundamentals_history?select=fiscal_date,period,revenue,eps,net_income&ticker=eq.${tk}&period=neq.FY&order=fiscal_date.desc&limit=8`),
+    pg(`/news?select=title,site,url,published_ts&ticker=eq.${tk}&order=published_ts.desc.nullslast&limit=8`),
+    pg(`/analyst_estimates?select=fiscal_date,est_eps_avg,est_revenue_avg&ticker=eq.${tk}&period=eq.annual&order=fiscal_date.desc&limit=5`)
+  ]);
+  const p=prof[0]||{};
+  const px=bars.length?bars[0].close:p.price;
+  let h=`<div class="back" onclick="location.hash=''">← dashboard</div>`;
+  h+=`<div class="hdr"><span class="big">${tk}</span><span class="px">${px?fmtPx(px):''}</span></div>`;
+  h+=`<div class="sub">${p.name||''}${p.sector?' · '+p.sector:''}${p.industry?' · '+p.industry:''}<br>`+
+     `${p.market_cap?'mktcap '+fmtCap(p.market_cap):''}${p.beta?' · beta '+p.beta.toFixed(2):''}`+
+     `${p.range_52wk?' · 52wk '+p.range_52wk:''}${p.avg_volume?' · avg vol '+fmtCap(p.avg_volume):''}</div>`;
+  h+=`<h2>Price · 1Y daily</h2><canvas id="chart" width="1060" height="220"></canvas>`;
+  if(stats.length){
+    h+=`<h2>Stat readings</h2><table><tr><th>Indicator</th><th>TF</th><th>Current</th><th>Z</th><th>Percentile</th></tr>`;
+    for(const s of stats){
+      h+=`<tr><td>${s.name}</td><td>${s.tf}</td><td>${s.current!=null?s.current.toFixed(2):'—'}</td>`+
+         `<td class="${cls(s.zscore)}">${s.zscore!=null?s.zscore.toFixed(2):'—'}</td>`+
+         `<td>${s.percentile!=null?Math.round(s.percentile)+'th':'—'}</td></tr>`;
+    }
+    h+=`</table>`;
+  }
+  if(funda.length){
+    h+=`<h2>Last quarters</h2><table><tr><th>Quarter</th><th>Revenue</th><th>EPS</th><th>Net income</th></tr>`;
+    for(const f of funda){
+      h+=`<tr><td>${f.period} ${f.fiscal_date}</td><td>${f.revenue?fmtCap(f.revenue):'—'}</td>`+
+         `<td>${f.eps!=null?f.eps:'—'}</td><td>${f.net_income?fmtCap(f.net_income):'—'}</td></tr>`;
+    }
+    h+=`</table>`;
+  }
+  if(est.length){
+    h+=`<h2>Forward estimates (annual EPS / revenue)</h2><table><tr><th>Fiscal date</th><th>EPS est</th><th>Revenue est</th></tr>`;
+    for(const e of est){
+      h+=`<tr><td>${e.fiscal_date}</td><td>${e.est_eps_avg!=null?e.est_eps_avg.toFixed(2):'—'}</td>`+
+         `<td>${e.est_revenue_avg?fmtCap(e.est_revenue_avg):'—'}</td></tr>`;
+    }
+    h+=`</table>`;
+  }
+  if(news.length){
+    h+=`<h2>News</h2>`;
+    for(const n of news){
+      const d=n.published_ts?new Date(n.published_ts*1000).toISOString().slice(0,10):'';
+      h+=`<div class="newsrow"><a href="${n.url}" target="_blank" rel="noopener">${n.title}</a><div class="src">${n.site||''} ${d}</div></div>`;
+    }
+  }
+  h+=`<h2>Ask about ${tk}</h2><div class="sub" style="margin-bottom:30px">Open <a href="chat.html" target="_blank" style="color:var(--cyan)">Market Chat</a> and ask — it reads everything on this page and 25M points more.</div>`;
+  view.innerHTML=h;
+  drawChart(bars.reverse());
+}
+function drawChart(bars){
+  const c=document.getElementById('chart');if(!c||!bars.length)return;
+  const ctx=c.getContext('2d');
+  const W=c.width,H=c.height,P=10;
+  const vals=bars.map(b=>b.close);
+  const mn=Math.min(...vals),mx=Math.max(...vals);
+  ctx.clearRect(0,0,W,H);
+  ctx.strokeStyle='#00D4FF';ctx.lineWidth=1.6;ctx.beginPath();
+  bars.forEach((b,i)=>{
+    const x=P+(W-2*P)*i/(bars.length-1);
+    const y=H-P-(H-2*P)*((b.close-mn)/((mx-mn)||1));
+    i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+  });
+  ctx.stroke();
+  ctx.fillStyle='#888899';ctx.font='11px Menlo';
+  ctx.fillText(fmtPx(mx),P,14);ctx.fillText(fmtPx(mn),P,H-4);
+}
+
+function chatView(){
+  document.getElementById('nav-chat').classList.add('on');document.getElementById('nav-dash').classList.remove('on');
+  view.innerHTML='<iframe src="chat.html"></iframe>';
+  view.style.padding='0';
+}
+async function route(){
+  view.style.padding='16px';
+  const h=location.hash.replace('#','');
+  try{
+    if(h==='chat') chatView();
+    else if(h.startsWith('t/')) await company(h.slice(2).toUpperCase());
+    else await dashboard();
+  }catch(e){
+    view.innerHTML='<div class="load">error: '+e.message+'</div>';
+  }
+}
+window.addEventListener('hashchange',route);
+route();
+if('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
